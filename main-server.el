@@ -25,14 +25,15 @@ TREE is created with `directory-tree'.  The printed result is a
 list where .org files are displayed as link under
 `eserver-root'. The result is intended to be captured with org
 code block."
-  (dotimes (_ dep) (princ "  "))
-  (princ (format "- =%s/=\n" (file-name-nondirectory (car tree))))
+  (princ (format "%s- =%s/=\n"
+                 (make-string (* 2 dep) ? )
+                 (file-name-nondirectory (car tree))))
   (dolist (path (cdr tree))
     (if (consp path)
         (directory-tree-to-org-link-list path (1+ dep))
       (when (string-suffix-p ".org" path)
-        (dotimes (_ (1+ dep)) (princ "  "))
-        (princ (format "- [[http:/%s][=%s=]]\n" ; one slash, relative path
+        (princ (format "%s- [[http:/%s][=%s=]]\n" ; one slash, relative path
+                       (make-string (* 2 (1+ dep)) ? )
                        (f-relative path eserver-root)
                        (file-name-nondirectory path)))))))
 
@@ -49,13 +50,66 @@ code block."
   :group 'eserver
   :type 'directory)
 
+(defvar eserver-site-descriptions '()
+  "Alist of descriptions of sites under EServer.
+This variable is added to by main-server.el at `eserver-root', or
+server.el under subdirectories of `eserver-root'. For example:
+  ((\"/\" . \"describe sites under EServer\")
+   (\"/blog\" . \"this is a blog\"))")
+
+(defun eserver-register-site (site description)
+  "Register SITE with DESCRIPTION under EServer."
+  (setf (alist-get site eserver-site-descriptions nil nil 'string=)
+        description))
+
 (setq httpd-host "0.0.0.0")             ; listen for all IPV4 connections
 (setq httpd-serve-files nil)            ; do not serve files
 (httpd-start)
 
+;; /
+
+(eserver-register-site "/"
+                       "Describe sites under EServer.")
+
+(defun httpd/ (proc path &rest args)
+  (with-httpd-buffer proc "text/plain"
+    (princ "available sites:\n")
+    (let* ((max-site-length             ; max length of site name
+            (cl-reduce 'max
+                       (mapcar (lambda (site-cons)
+                                 (length (car site-cons)))
+                               eserver-site-descriptions)))
+           ;; length of the first column (including spaces)
+           (column-length (+ 6 max-site-length))
+           (rows                        ; rows to be printed
+            (sort ; sort list generated from `eserver-site-descriptions'
+             (mapcar (lambda (site-cons)
+                       (format "%s%s%s" ; site-name spaces description
+                               (car site-cons)
+                               (make-string (- column-length
+                                               (length (car site-cons)))
+                                            ? )
+                               (cdr site-cons)))
+                     eserver-site-descriptions)
+             'string-lessp)))
+      ;; print each row
+      (mapc (lambda (row)
+              (princ (format "  %s\n" row)))
+            rows))))
+
+;; /favicon.ico
+
+(eserver-register-site "/favicon.ico"
+                       "Favorite icon of this site.")
+
 (defun httpd/favicon.ico (proc path &rest args)
   "Serve file /favicon.ico."
   (httpd-send-file proc (expand-file-name "favicon.ico" eserver-root)))
+
+;; /buffer
+
+(eserver-register-site "/buffer"
+                       "Emacs buffer list.")
 
 (defun httpd/buffer (proc path arguments &rest args)
   "Serve a list of Emacs buffers."
