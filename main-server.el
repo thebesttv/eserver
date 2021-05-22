@@ -66,7 +66,7 @@ server.el under subdirectories of `eserver-root'. For example:
 (setq httpd-serve-files nil)            ; do not serve files
 (httpd-start)
 
-;; /
+;; / - root directory
 
 (eserver-register-site "/"
                        "Describe sites under EServer.")
