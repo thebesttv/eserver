@@ -1,5 +1,7 @@
 ;; helper function
-(require 'f)
+(require 'use-package)
+(use-package f
+  :ensure t)
 
 (defun directory-non-hidden-files (directory)
   "Return absolute path of all non-hidden & non-backup files in DIRECTORY.
