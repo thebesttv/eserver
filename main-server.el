@@ -73,7 +73,7 @@ server.el under subdirectories of `eserver-root'. For example:
 (eserver-register-site "/"
                        "Describe sites under EServer.")
 
-(defun httpd/ (proc path &rest args)
+(defun httpd/ (proc path query request)
   (with-httpd-buffer proc "text/plain"
     (princ "available sites:\n")
     (let* ((max-site-length             ; max length of site name
