@@ -61,6 +61,7 @@ server.el under subdirectories of `eserver-root'. For example:
 
 (defun eserver-register-site (site description)
   "Register SITE with DESCRIPTION under EServer."
+  (declare (indent defun))
   (setf (alist-get site eserver-site-descriptions nil nil 'string=)
         description))
 
@@ -71,7 +72,7 @@ server.el under subdirectories of `eserver-root'. For example:
 ;; / - root directory
 
 (eserver-register-site "/"
-                       "Describe sites under EServer.")
+  "Describe sites under EServer.")
 
 (defun httpd/ (proc path query request)
   (with-httpd-buffer proc "text/plain"
@@ -102,7 +103,7 @@ server.el under subdirectories of `eserver-root'. For example:
 ;; /favicon.ico
 
 (eserver-register-site "/favicon.ico"
-                       "Favorite icon of this site.")
+  "Favorite icon of this site.")
 
 (defun httpd/favicon.ico (proc path &rest args)
   "Serve file /favicon.ico."
@@ -111,7 +112,7 @@ server.el under subdirectories of `eserver-root'. For example:
 ;; /buffer
 
 (eserver-register-site "/buffer"
-                       "Emacs buffer list.")
+  "Emacs buffer list.")
 
 (defun httpd/buffer (proc path arguments &rest args)
   "Serve a list of Emacs buffers."
