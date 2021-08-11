@@ -74,9 +74,14 @@ server.el under subdirectories of `eserver-root'. For example:
 (eserver-register-site "/"
   "Describe sites under EServer.")
 
+(defun eserver-request-get (key request)
+  (alist-get key request "" nil 'string-equal))
+
 (defun httpd/ (proc path query request)
-  (with-httpd-buffer proc "text/plain"
-    (princ "available sites:\n")
+  (with-httpd-buffer proc "text/plain; charset=utf-8"
+    (insert "You are coming from host: "
+            (car (eserver-request-get "Host" request)) ".\n"
+            "Available sites:\n")
     (let* ((max-site-length             ; max length of site name
             (apply 'max (mapcar (lambda (site-cons)
                                   (length (car site-cons)))
@@ -115,7 +120,7 @@ server.el under subdirectories of `eserver-root'. For example:
 
 (defun httpd/buffer (proc path arguments &rest args)
   "Serve a list of Emacs buffers."
-  (with-httpd-buffer proc "text/plain"
+  (with-httpd-buffer proc "text/plain; charset=utf-8"
     (if (or (string-equal path "/buffer")
             (string-equal path "/buffer/"))
         (insert-buffer (list-buffers-noselect))
