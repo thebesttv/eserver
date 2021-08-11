@@ -78,10 +78,9 @@ server.el under subdirectories of `eserver-root'. For example:
   (with-httpd-buffer proc "text/plain"
     (princ "available sites:\n")
     (let* ((max-site-length             ; max length of site name
-            (cl-reduce 'max
-                       (mapcar (lambda (site-cons)
-                                 (length (car site-cons)))
-                               eserver-site-descriptions)))
+            (apply 'max (mapcar (lambda (site-cons)
+                                  (length (car site-cons)))
+                                eserver-site-descriptions)))
            ;; length of the first column (including spaces)
            (column-length (+ 6 max-site-length))
            (rows                        ; rows to be printed
@@ -91,7 +90,7 @@ server.el under subdirectories of `eserver-root'. For example:
                                (car site-cons)
                                (make-string (- column-length
                                                (length (car site-cons)))
-                                            ? )
+                                            ? ) ; space character
                                (cdr site-cons)))
                      eserver-site-descriptions)
              'string-lessp)))
