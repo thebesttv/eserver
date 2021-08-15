@@ -1,4 +1,5 @@
-;; helper function
+;;; helper function
+
 (require 'use-package)
 (use-package f
   :ensure t)
@@ -39,7 +40,7 @@ code block."
                        (f-relative path eserver-root)
                        (file-name-nondirectory path)))))))
 
-;; main server start
+;;; main server start
 
 (require 'simple-httpd)
 
@@ -67,9 +68,14 @@ server.el under subdirectories of `eserver-root'. For example:
 
 (setq httpd-host "0.0.0.0")             ; listen for all IPV4 connections
 (setq httpd-serve-files nil)            ; do not serve files
+
+;;; load custom options before starting server, e.g. change `httpd-port'
+(when (file-exists-p (expand-file-name "custom.el" eserver-root))
+  (load (expand-file-name "custom.el" eserver-root)))
+
 (httpd-start)
 
-;; / - root directory
+;;; / - describe cites under EServer
 
 (eserver-register-site "/"
   "Describe sites under EServer.")
@@ -77,12 +83,9 @@ server.el under subdirectories of `eserver-root'. For example:
 (defun eserver-request-get (key request)
   (alist-get key request "" nil 'string-equal))
 
-(defun httpd/ (proc path query request)
-  (with-httpd-buffer proc "text/plain; charset=utf-8"
-    (insert "You are coming from host: "
-            (car (eserver-request-get "Host" request)) ".\n"
-            "Available sites:\n")
-    (let* ((max-site-length             ; max length of site name
+(defun eserver-describe-sites ()
+  (princ "Available sites:\n")
+  (let* ((max-site-length             ; max length of site name
             (apply 'max (mapcar (lambda (site-cons)
                                   (length (car site-cons)))
                                 eserver-site-descriptions)))
@@ -102,18 +105,25 @@ server.el under subdirectories of `eserver-root'. For example:
       ;; print each row
       (mapc (lambda (row)
               (princ (format "  %s\n" row)))
-            rows))))
+            rows)
+      nil))
 
-;; /favicon.ico
+(defun httpd/ (proc path query request)
+  (with-httpd-buffer proc "text/plain; charset=utf-8"
+    (insert "You are coming from host: "
+            (car (eserver-request-get "Host" request)) ".\n")
+    (eserver-describe-sites)))
+
+;;; /favicon.ico
 
 (eserver-register-site "/favicon.ico"
   "Favorite icon of this site.")
 
 (defun httpd/favicon.ico (proc path &rest args)
-  "Serve file /favicon.ico."
+  "Send favorite icon."
   (httpd-send-file proc (expand-file-name "favicon.ico" eserver-root)))
 
-;; /buffer
+;;; /buffer
 
 (eserver-register-site "/buffer"
   "Emacs buffer list.")
@@ -129,7 +139,7 @@ server.el under subdirectories of `eserver-root'. For example:
       (when (get-buffer path)
         (insert-buffer path)))))
 
-;; load all server.el under eserver-root
+;;; load all server.el under eserver-root
 
 (mapc (lambda (file)
         (load file)
