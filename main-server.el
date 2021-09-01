@@ -60,6 +60,9 @@ server.el under subdirectories of `eserver-root'. For example:
   ((\"/\" . \"describe sites under EServer\")
    (\"/blog\" . \"this is a blog\"))")
 
+(defvar eserver-icp-number nil
+  "If non-nil, display ICP licensing number.")
+
 (defun eserver-register-site (site description)
   "Register SITE with DESCRIPTION under EServer."
   (declare (indent defun))
@@ -69,7 +72,9 @@ server.el under subdirectories of `eserver-root'. For example:
 (setq httpd-host "0.0.0.0")             ; listen for all IPV4 connections
 (setq httpd-serve-files nil)            ; do not serve files
 
-;;; load custom options before starting server, e.g. change `httpd-port'
+;;; load custom options before starting server, e.g.
+;;;   change `httpd-port'
+;;;   set ICP licensing number
 (when (file-exists-p (expand-file-name "custom.el" eserver-root))
   (load (expand-file-name "custom.el" eserver-root)))
 
@@ -109,10 +114,18 @@ server.el under subdirectories of `eserver-root'. For example:
       nil))
 
 (defun httpd/ (proc path query request)
-  (with-httpd-buffer proc "text/plain; charset=utf-8"
+  (with-httpd-buffer proc "text/html; charset=utf-8"
+    (insert "<pre>")
     (insert "You are coming from host: "
             (car (eserver-request-get "Host" request)) ".\n")
-    (eserver-describe-sites)))
+    (eserver-describe-sites)
+    (insert "</pre>\n")
+    ;; add ICP licensing number at bottom
+    (when (stringp eserver-icp-number)
+      (insert "<hr>")
+      (insert "<a href=\"https://beian.miit.gov.cn/\" target=\"_blank\">"
+              eserver-icp-number
+              "</a>\n"))))
 
 ;;; /favicon.ico
 
