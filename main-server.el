@@ -99,7 +99,9 @@ server.el under subdirectories of `eserver-root'. For example:
            (rows                        ; rows to be printed
             (sort ; sort list generated from `eserver-site-descriptions'
              (mapcar (lambda (site-cons)
-                       (format "%s%s%s" ; site-name spaces description
+                       ;; site-name spaces description
+                       (format "<a href=\"%s\">%s</a>%s%s"
+                               (car site-cons)
                                (car site-cons)
                                (make-string (- column-length
                                                (length (car site-cons)))
