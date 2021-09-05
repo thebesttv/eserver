@@ -63,6 +63,10 @@ server.el under subdirectories of `eserver-root'. For example:
 (defvar eserver-icp-number nil
   "If non-nil, display ICP licensing number.")
 
+(defvar eserver-police-number nil
+  "Cons cell representing police licensing number.
+E.g. (\"11010802020088\" . \"京公网安备 11010802020088 号\")")
+
 (defun eserver-register-site (site description)
   "Register SITE with DESCRIPTION under EServer."
   (declare (indent defun))
@@ -115,19 +119,41 @@ server.el under subdirectories of `eserver-root'. For example:
             rows)
       nil))
 
+(defun eserver-host-name (host)
+  "Return proper hostname.
+E.g. 127.0.0.1:8080 -> localhost
+     what.blog.abc.xyz -> abc.xyz"
+  (setq host (substring host 0 (string-match-p ":" host)))
+  (if (or (string-equal host "localhost")
+          (string-equal host "127.0.0.1"))
+      "localhost"
+    (string-join (last (split-string host "\\.") 2) ".")))
+
 (defun httpd/ (proc path query request)
   (with-httpd-buffer proc "text/html; charset=utf-8"
-    (insert "<pre>")
-    (insert "You are coming from host: "
-            (car (eserver-request-get "Host" request)) ".\n")
-    (eserver-describe-sites)
-    (insert "</pre>\n")
-    ;; add ICP licensing number at bottom
-    (when (stringp eserver-icp-number)
-      (insert "<hr>")
-      (insert "<a href=\"https://beian.miit.gov.cn/\" target=\"_blank\">"
-              eserver-icp-number
-              "</a>\n"))))
+    (let ((host-name (eserver-host-name
+                      (car (eserver-request-get "Host" request)))))
+      (insert "<pre>")
+      (insert "You are coming from host: "
+              host-name ".\n")
+      (eserver-describe-sites)
+      (insert "</pre>\n<hr>\n")
+      ;; add ICP licensing number at bottom
+      (let ((icp-number (cdr (assoc-string host-name eserver-icp-number))))
+        (when icp-number
+          (insert "<a href=\"https://beian.miit.gov.cn/\" target=\"_blank\">"
+                  icp-number
+                  "</a><br>\n")))
+      (when eserver-police-number
+        (insert "<a target=\"_blank\" href=\"http://www.beian.gov.cn/portal/registerSystemInfo?recordcode="
+                (car eserver-police-number)
+                "\">\n  <img src=\"/beian.png\"/>"
+                (cdr eserver-police-number)
+                "\n</a><br>\n")))))
+
+;;; beian.png
+(defun httpd/beian.png (proc path &rest args)
+  (httpd-send-file proc (expand-file-name "beian.png" eserver-root)))
 
 ;;; /favicon.ico
 
