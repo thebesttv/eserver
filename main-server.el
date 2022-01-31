@@ -180,6 +180,17 @@ E.g. 127.0.0.1:8080 -> localhost
       (when (get-buffer path)
         (insert-buffer path)))))
 
+;;; /update
+
+;; (eserver-register-site "/update"
+;;   "Run the update script.")
+
+;; (defun httpd/update (proc path parameters &rest args)
+;;   (with-httpd-buffer proc "text/plain; charset=utf-8"
+;;     (let ((shell-command-dont-erase-buffer t))
+;;       (shell-command (expand-file-name "update.sh" eserver-root)
+;;                      (current-buffer)))))
+
 ;;; load all server.el under eserver-root
 
 (mapc (lambda (file)
