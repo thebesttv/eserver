@@ -40,6 +40,42 @@ code block."
                        (f-relative path eserver-root)
                        (file-name-nondirectory path)))))))
 
+(defun eserver-file-safe-p (filename
+                            &optional include-directories root-dir)
+  "Check if FILENAME is safe to access.
+
+FILENAME must be absolute path.
+
+By default, directories are excluded, but if opeiontal argument
+INCLUDE-DIRECTORIES is non-nil, they are included.
+
+By default, `eserver-root' is used as ROOT-DIR.
+
+A safe file:
+- Is in the form of multiple '/name' concated together, where `name'
+  - is not empty
+  - is composed of alphanumeric characters, '.', '-', or '_'
+  - does not start with '.', which means FILE
+    - cannot be hidden or in any hidden directory
+    - cannot go up any directory (as '..' cannot appear)
+- May end with '/' if it's a directory
+- Exists and is readable
+- Must be under ROOT-DIR (can be the root directory itself)"
+  (setq root-dir (string-remove-suffix
+                  "/" (or root-dir eserver-root)))
+  (let ((safe-rx (rx line-start
+                     (one-or-more
+                      "/"
+                      (any "A-Z" "a-z" "0-9" ?- ?_) ; do not start with dot
+                      (zero-or-more (any "A-Z" "a-z" "0-9" ?. ?- ?_)))
+                     (zero-or-one "/")
+                     line-end)))
+    (and (string-prefix-p root-dir filename)
+         (string-match-p safe-rx filename)
+         (file-readable-p filename)
+         (or include-directories
+             (not (file-directory-p filename))))))
+
 ;;; main server start
 
 (require 'simple-httpd)
