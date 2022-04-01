@@ -129,6 +129,18 @@ E.g. 127.0.0.1:8080 -> localhost
       "localhost"
     (string-join (last (split-string host "\\.") 2) ".")))
 
+(defun eserver-insert-holiday-greeting ()
+  "Insert holiday greeting"
+  (let ((holidaies
+         '(((4 . 1) . "Happy 愚人节"))))
+    (let* ((dtime (decode-time (current-time)))
+           (month (decoded-time-month dtime))
+           (day (decoded-time-day dtime))
+           (date (cons month day))
+           (greeting (alist-get date holidaies nil nil 'equal)))
+      (when greeting
+        (insert (format "  %s\n" greeting))))))
+
 (defun httpd/ (proc path query request)
   (with-httpd-buffer proc "text/html; charset=utf-8"
     (let ((host-name (eserver-host-name
@@ -137,6 +149,9 @@ E.g. 127.0.0.1:8080 -> localhost
       (insert "You are coming from host: "
               host-name ".\n")
       (eserver-describe-sites)
+      (insert "\n")
+      (insert (format-time-string "Server time: %Y-%m-%d %T\n"))
+      (eserver-insert-holiday-greeting)
       (insert "</pre>\n<hr>\n")
       ;; add ICP licensing number at bottom
       (let ((icp-number (cdr (assoc-string host-name eserver-icp-number))))
