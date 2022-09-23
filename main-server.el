@@ -28,14 +28,14 @@ TREE is created with `directory-tree'.  The printed result is a
 list where .org files are displayed as link under
 `eserver-root'. The result is intended to be captured with org
 code block."
-  (princ (format "%s- =%s/=\n"
+  (princ (format "%s- %s/\n"
                  (make-string (* 2 dep) ? )
                  (file-name-nondirectory (car tree))))
   (dolist (path (cdr tree))
     (if (consp path)
         (directory-tree-to-org-link-list path (1+ dep))
       (when (string-suffix-p ".org" path)
-        (princ (format "%s- [[http:/%s][=%s=]]\n" ; one slash, relative path
+        (princ (format "%s- [[http:/%s][%s]]\n" ; one slash, relative path
                        (make-string (* 2 (1+ dep)) ? )
                        (f-relative path eserver-root)
                        (file-name-nondirectory path)))))))
